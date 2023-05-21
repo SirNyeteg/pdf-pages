@@ -1,8 +1,9 @@
 from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QPushButton, 
-                             QFileDialog, QTableWidget, QTableWidgetItem, QHeaderView,
+                             QFileDialog, QTableWidgetItem, QHeaderView,
                              QAbstractItemView, QMessageBox)
 from pdf import PdfReader
 from settings import Settings
+from table import TableWidget
 
 from typing import Iterable, List
 
@@ -26,10 +27,8 @@ class MainWindow(QWidget):
         self.file_button.clicked.connect(self.openFile)
         layout.addWidget(self.file_button)
 
-        # Create the table widget with 4 columns
-        self.table = QTableWidget()
+        self.table = TableWidget()
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        self.table.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
         self.table.horizontalHeader().setStyleSheet("QHeaderView::section { background-color: silver;}")
 
         self.table.setColumnCount(4)
@@ -40,12 +39,10 @@ class MainWindow(QWidget):
         self.table.verticalHeader().setVisible(False)
         self.table.setWordWrap(False)
 
-        # Set the width of the first three columns
         self.table.setColumnWidth(0, 80)
         self.table.setColumnWidth(1, 120)
         self.table.setColumnWidth(2, 80)
 
-        # Allow the last column to expand
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(3, QHeaderView.Stretch)
 
@@ -72,7 +69,7 @@ class MainWindow(QWidget):
         else:
             ranges.append(f"{start}-{prev}")
         return ",".join(ranges)
-    
+
     def openFile(self):
         file_dialog = QFileDialog()
         file_path, _ = file_dialog.getOpenFileName(self, 'Open PDF', '', 'PDF Files (*.pdf)')

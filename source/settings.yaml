@@ -32,4 +32,19 @@ dimensions:
     size:
       width: 594
       height: 841
-  
+  - name: "A/0"
+    size:
+      width: 841
+      height: 1189
+  - name: "B/4"
+    size:
+      width: 250
+      height: 353
+  - name: "B/3"
+    size:
+      width: 353
+      height: 500
+  - name: "B/2"
+    size:
+      width: 500
+      height: 707

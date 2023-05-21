@@ -1,14 +1,13 @@
 from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QPushButton, 
                              QFileDialog, QTableWidget, QTableWidgetItem, QHeaderView,
                              QAbstractItemView, QMessageBox)
-from pdf import PdfReader, PageDimension
+from pdf import PdfReader
 from settings import Settings
 
-from typing import Dict, Iterable, List
+from typing import Iterable, List
 
 import os
 import sys
-import yaml
 
 
 class MainWindow(QWidget):
@@ -72,23 +71,23 @@ class MainWindow(QWidget):
             ranges.append(f"{prev}")
         else:
             ranges.append(f"{start}-{prev}")
-
-        
         return ",".join(ranges)
-
+    
     def openFile(self):
         file_dialog = QFileDialog()
         file_path, _ = file_dialog.getOpenFileName(self, 'Open PDF', '', 'PDF Files (*.pdf)')
         if file_path:
             reader = PdfReader(file_path)
-            stats = reader.getStats()
+            stats = sorted(reader.getStats(), key=lambda x: (
+                min(x.dimension.width, x.dimension.height), max(x.dimension.width, x.dimension.height))) 
+
             self.table.clearContents()
             self.table.setRowCount(0)
             for row, stat in enumerate(stats):
                 self.table.insertRow(row)
                 self.table.setItem(row, 0, QTableWidgetItem(str(len(stat.pages))))
-                w = stat.dimension.width
-                h = stat.dimension.height
+                w = min(stat.dimension.width, stat.dimension.height)
+                h = max(stat.dimension.width, stat.dimension.height)
                 paperSize = f"unknown" if stat.dimension not in self.settings.pageSizes else self.settings.pageSizes[stat.dimension]
                 self.table.setItem(row, 1, QTableWidgetItem(f"{w}x{h} mm"))
                 self.table.setItem(row, 2, QTableWidgetItem(paperSize))

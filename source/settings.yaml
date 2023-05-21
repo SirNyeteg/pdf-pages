@@ -1,0 +1,35 @@
+configuration:
+  window-size:
+    width: 1024
+    height: 400
+  group-pages: true
+dimensions:
+  - name: "A/4"
+    size:
+      width: 210
+      height: 297
+  - name: "A/3"
+    size:
+      width: 297
+      height: 420
+  - name: "A/5"
+    size:
+      width: 148
+      height: 210
+  - name: "A/6"
+    size:
+      width: 105
+      height: 148
+  - name: "Letter"
+    size:
+      width: 216
+      height: 279
+  - name: "A/2"
+    size:
+      width: 420
+      height: 594
+  - name: "A/1"
+    size:
+      width: 594
+      height: 841
+  

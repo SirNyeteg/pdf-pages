@@ -26,10 +26,12 @@ class TableWidget(QTableWidget):
         clipboardData = ""
         maxRow = max([row for row, _ in selectedCells.keys()])
         maxCol = max([col for _, col in selectedCells.keys()])
-        for row in range(maxRow + 1):
-            for col in range(maxCol + 1):
+        minRow = min([row for row, _ in selectedCells.keys()])
+        minCol = min([col for _, col in selectedCells.keys()])
+        for row in range(minRow, maxRow + 1):
+            for col in range(minCol, maxCol + 1):
                 cellValue = selectedCells.get((row, col), "")
-                clipboardData += cellValue + "\t"
+                clipboardData += cellValue + ("\t" if col < maxCol else "")
             clipboardData += "\n"
 
         clipboard = QApplication.clipboard()

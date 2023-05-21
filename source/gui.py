@@ -31,20 +31,22 @@ class MainWindow(QWidget):
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.horizontalHeader().setStyleSheet("QHeaderView::section { background-color: silver;}")
 
-        self.table.setColumnCount(4)
+        self.table.setColumnCount(6)
         layout.addWidget(self.table)
 
-        headers = ['Page count', 'Dimension', 'Paper size', 'Pages']
+        headers = ['Page count', 'Dimensions', 'Short', 'Long', 'Paper size', 'Pages']
         self.table.setHorizontalHeaderLabels(headers)
         self.table.verticalHeader().setVisible(False)
         self.table.setWordWrap(False)
 
-        self.table.setColumnWidth(0, 80)
-        self.table.setColumnWidth(1, 120)
-        self.table.setColumnWidth(2, 80)
+        self.table.setColumnWidth(0, 70)
+        self.table.setColumnWidth(1, 100)
+        self.table.setColumnWidth(2, 40)
+        self.table.setColumnWidth(3, 40)
+        self.table.setColumnWidth(4, 70)
 
         header = self.table.horizontalHeader()
-        header.setSectionResizeMode(3, QHeaderView.Stretch)
+        header.setSectionResizeMode(5, QHeaderView.Stretch)
 
     def printPages(self, pages:Iterable[int]):
         if len(pages) == 0:
@@ -87,8 +89,10 @@ class MainWindow(QWidget):
                 h = max(stat.dimension.width, stat.dimension.height)
                 paperSize = f"unknown" if stat.dimension not in self.settings.pageSizes else self.settings.pageSizes[stat.dimension]
                 self.table.setItem(row, 1, QTableWidgetItem(f"{w}x{h} mm"))
-                self.table.setItem(row, 2, QTableWidgetItem(paperSize))
-                self.table.setItem(row, 3, QTableWidgetItem(self.printPages(stat.pages)))
+                self.table.setItem(row, 2, QTableWidgetItem(f"{w}"))
+                self.table.setItem(row, 3, QTableWidgetItem(f"{h}"))
+                self.table.setItem(row, 4, QTableWidgetItem(paperSize))
+                self.table.setItem(row, 5, QTableWidgetItem(self.printPages(stat.pages)))
 
 
 def showAlert(text:str):

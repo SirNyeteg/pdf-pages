@@ -13,7 +13,7 @@ class PageDimension:
 
     def __hash__(self) -> int:
         return hash(frozenset((self.width, self.height)))
-    
+
     def __eq__(self, other:PageDimension) -> bool:
         return self.__hash__() == other.__hash__()
 
@@ -39,9 +39,9 @@ class PdfReader:
                 page_sizes = []
                 for page_num in range(num_pages):
                     page = pdf_reader.pages[page_num]
-                    size = page.mediabox
-                    width = convertPointsToMm(float(size[2]))
-                    height = convertPointsToMm(float(size[3]))
+                    size = page.cropbox
+                    width = convertPointsToMm(float(size[2]) - float(size[0]))
+                    height = convertPointsToMm(float(size[3]) - float(size[1]))
                     dimension = PageDimension(width, height)
                     if dimension not in self.stats:
                         self.stats[dimension] = PageStat(dimension, [])
@@ -51,7 +51,7 @@ class PdfReader:
 
     def getStats(self) -> Iterable[PageStat]:
         return self.stats.values()
-    
+
 
 def convertPointsToMm(points:float) -> int:
     mm = round(points * 0.352777778)

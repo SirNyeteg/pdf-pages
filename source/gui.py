@@ -11,6 +11,9 @@ import os
 import sys
 
 
+BUILD_VERSION = "2023-08-09"
+
+
 class MainWindow(QWidget):
     def __init__(self, settings:Settings):
         super().__init__()
@@ -120,6 +123,6 @@ if __name__ == '__main__':
     if settings.error is not None:
         showAlert(settings.error)
     window = MainWindow(settings)
-    window.setWindowTitle("PDF page size reader")
+    window.setWindowTitle(f"PDF page size reader ({BUILD_VERSION})")
     window.show()
     sys.exit(app.exec_())

@@ -1,0 +1,5 @@
+reportlab
+PyYaml
+PyQt5
+pyinstaller
+PyPDF2

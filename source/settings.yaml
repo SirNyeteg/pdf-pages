@@ -48,3 +48,8 @@ dimensions:
     size:
       width: 500
       height: 707
+big-pages:
+  - min-short-side: 298
+    min-long-side: 0
+  - min-short-side: 0
+    min-long-side: 421

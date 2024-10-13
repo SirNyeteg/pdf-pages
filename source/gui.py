@@ -1,6 +1,9 @@
 from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QPushButton, 
                              QFileDialog, QTableWidgetItem, QHeaderView,
-                             QAbstractItemView, QMessageBox)
+                             QAbstractItemView, QMessageBox, QHBoxLayout, QLabel,
+                             QTableWidgetSelectionRange, QMenu)
+from PyQt5.QtGui import QContextMenuEvent
+
 from pdf import PdfReader
 from settings import Settings
 from table import TableWidget
@@ -12,6 +15,33 @@ import sys
 
 
 BUILD_VERSION = "2023-08-09"
+
+
+class SurfaceLabel(QLabel):
+    def __init__(self):
+        super().__init__("")
+        self.surface:int = 0
+        self.updateText()
+
+    def setSurface(self, surface:int):
+        self.surface = surface
+        self.updateText()
+        
+    def updateText(self):
+        self.setText(f"The surface of selected pages: {self.getFormattedSurface()} dm<sup>2</sup>")
+
+    def getFormattedSurface(self) -> str:
+        return f"{self.surface / (100*100):.1f}"
+
+    def contextMenuEvent(self, event:QContextMenuEvent):
+        menu = QMenu(self)
+        copy_action = menu.addAction(f"Copy {self.getFormattedSurface()} to clipboard")
+        copy_action.triggered.connect(self.copyToClipboard)
+        menu.exec_(event.globalPos())
+
+    def copyToClipboard(self):
+        clipboard = QApplication.clipboard()
+        clipboard.setText(self.getFormattedSurface())
 
 
 class MainWindow(QWidget):
@@ -33,6 +63,8 @@ class MainWindow(QWidget):
         self.table = TableWidget()
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.horizontalHeader().setStyleSheet("QHeaderView::section { background-color: silver;}")
+        self.table.itemSelectionChanged.connect(self.calculateBigPagesSurface)
+        self.table.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
 
         self.table.setColumnCount(6)
         layout.addWidget(self.table)
@@ -50,6 +82,16 @@ class MainWindow(QWidget):
 
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(5, QHeaderView.Stretch)
+        
+        surfaceLayout = QHBoxLayout()
+        self.surfaceButton = QPushButton('Select big pages')
+        self.surfaceButton.clicked.connect(self.selectBigPages)
+        surfaceLayout.addWidget(self.surfaceButton)
+        self.surfaceLabel = SurfaceLabel()
+        surfaceLayout.addWidget(self.surfaceLabel)
+        surfaceLayout.setStretch(0, 1)
+        surfaceLayout.setStretch(1, 1)
+        layout.addLayout(surfaceLayout)
 
     def printPages(self, pages:Iterable[int]):
         if len(pages) == 0:
@@ -96,6 +138,35 @@ class MainWindow(QWidget):
                 self.table.setItem(row, 3, QTableWidgetItem(f"{h}"))
                 self.table.setItem(row, 4, QTableWidgetItem(paperSize))
                 self.table.setItem(row, 5, QTableWidgetItem(self.printPages(stat.pages)))
+
+    def selectBigPages(self):
+        self.table.clearSelection()
+        rowCount = self.table.rowCount()
+        for row in range(rowCount):
+            short = int(self.table.item(row, 2).text())
+            long = int(self.table.item(row, 3).text())
+            for rule in self.settings.bigPages:
+                minShort, minLong = rule
+                if short >= minShort and long >= minLong:
+                    selectionRange = QTableWidgetSelectionRange(row, 0, row, self.table.columnCount() - 1)
+                    self.table.setRangeSelected(selectionRange, True)
+                    break
+        self.table.setFocus()
+
+    def calculateBigPagesSurface(self):
+        selectedRanges = self.table.selectedRanges()
+        selectedRows = set()
+        for selectedRange in selectedRanges:
+            for row in range(selectedRange.topRow(), selectedRange.bottomRow() + 1):
+                selectedRows.add(row)
+        surface = 0
+        for row in selectedRows:
+            count = int(self.table.item(row, 0).text())
+            short = int(self.table.item(row, 2).text())
+            long = int(self.table.item(row, 3).text())
+            surface += count * (short * long)
+
+        self.surfaceLabel.setSurface(surface)
 
 
 def showAlert(text:str):

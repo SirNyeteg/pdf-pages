@@ -1,6 +1,6 @@
 from pdf import PageDimension
 
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple, List
 
 import os
 import sys
@@ -13,9 +13,11 @@ class Settings:
     pageSizes: Dict[PageDimension, str]
     groupPages:bool = True
     error:Optional[str] = None
+    bigPages:List[Tuple[int, int]]
 
     def __init__(self, path:str):
         self.pageSizes = {}
+        self.bigPages = []
         self.parse(path)
 
     def parse(self, path:str):
@@ -41,6 +43,9 @@ class Settings:
                             self.height = int(windowSize["height"])
                     if "group-pages" in config:
                         self.groupPages = bool(config["group-pages"])
+                if "big-pages" in data:
+                    for rule in data["big-pages"]:
+                        self.bigPages.append((int(rule["min-short-side"]),int(rule["min-long-side"])))
 
         except Exception as e:
             self.error = f"settings.yaml cannot be opened:\n{e}"

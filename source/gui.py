@@ -14,7 +14,7 @@ import os
 import sys
 
 
-BUILD_VERSION = "2023-08-09"
+BUILD_VERSION = "2024-10-13"
 
 
 class SurfaceLabel(QLabel):

@@ -1,7 +1,7 @@
 configuration:
   window-size:
     width: 1024
-    height: 400
+    height: 600
   group-pages: true
 dimensions:
   - name: "A/4"
@@ -48,8 +48,71 @@ dimensions:
     size:
       width: 500
       height: 707
-big-pages:
-  - min-short-side: 298
-    min-long-side: 0
-  - min-short-side: 0
-    min-long-side: 421
+
+filters:
+#  - text: "Select A/3-as"
+#    rules:
+#      - min-short-side: 217
+#        max-short-side: 297
+#        min-long-side: 217
+#        max-long-side: 420
+#      - min-short-side: 0
+#        max-short-side: 297
+#        min-long-side: 298
+#        max-long-side: 420
+
+language: HU
+
+dictionaries:
+  - name: HU
+    words:
+    - id: open-pdf
+      value: "PDF megnyitása"
+    - id: page-count
+      value: "Darab"
+    - id: dimensions
+      value: "Méret"
+    - id: short
+      value: "Rövid"
+    - id: long
+      value: "Hosszú"
+    - id: paper-size
+      value: "Szabvány"
+    - id: pages
+      value: "Oldalak"
+    - id: surface-text
+      value: "Kiválasztott oldalak teljes felülete"
+    - id: filter-action
+      value: "Szűrés módja"
+    - id: filter-select-rows
+      value: "Kiválasztás"
+    - id: filter-change-bg-color
+      value: "Háttérszín változtatás"
+    - id: unknown
+      value: "ismeretlen"
+  - name: EN
+    words:
+    - id: open-pdf
+      value: "Open PDF"
+    - id: page-count
+      value: "Page count"
+    - id: dimensions
+      value: "Dimensions"
+    - id: short
+      value: "Short"
+    - id: long
+      value: "Long"
+    - id: paper-size
+      value: "Paper size"
+    - id: pages
+      value: "Pages"
+    - id: surface-text
+      value: "The surface of selected pages"
+    - id: filter-action
+      value: "Filter action"
+    - id: filter-select-rows
+      value: "Select rows"
+    - id: filter-change-bg-color
+      value: "Change background color"
+    - id: unknown
+      value: "unknown"

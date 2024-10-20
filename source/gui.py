@@ -1,12 +1,14 @@
 from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QPushButton, 
                              QFileDialog, QTableWidgetItem, QHeaderView,
                              QAbstractItemView, QMessageBox, QHBoxLayout, QLabel,
-                             QTableWidgetSelectionRange, QMenu)
-from PyQt5.QtGui import QContextMenuEvent
+                             QTableWidgetSelectionRange, QMenu, QRadioButton, QButtonGroup,
+                             QGridLayout)
+from PyQt5.QtGui import QContextMenuEvent, QBrush, QColor
 
 from pdf import PdfReader
-from settings import Settings
+from settings import Settings, Filter
 from table import TableWidget
+from functools import partial
 
 from typing import Iterable, List
 
@@ -14,21 +16,23 @@ import os
 import sys
 
 
-BUILD_VERSION = "2024-10-13"
+BUILD_VERSION = "2024-10-20"
+MAX_BUTTON_COLS = 4
 
 
 class SurfaceLabel(QLabel):
-    def __init__(self):
+    def __init__(self, labelText:str):
         super().__init__("")
+        self.labelText = labelText
         self.surface:int = 0
         self.updateText()
 
     def setSurface(self, surface:int):
         self.surface = surface
         self.updateText()
-        
+
     def updateText(self):
-        self.setText(f"The surface of selected pages: {self.getFormattedSurface()} dm<sup>2</sup>")
+        self.setText(f"{self.labelText}: {self.getFormattedSurface()} dm<sup>2</sup>")
 
     def getFormattedSurface(self) -> str:
         return f"{self.surface / (100*100):.1f}"
@@ -50,13 +54,16 @@ class MainWindow(QWidget):
         self.settings = settings
         self.initUI()
 
+    def translate(self, id:str) -> str:
+        return self.settings.dictionary.getWord(id)
+
 
     def initUI(self):
         self.resize(self.settings.width, self.settings.height)
         layout = QVBoxLayout()
         self.setLayout(layout)
 
-        self.file_button = QPushButton('Open PDF')
+        self.file_button = QPushButton(self.translate("open-pdf"))
         self.file_button.clicked.connect(self.openFile)
         layout.addWidget(self.file_button)
 
@@ -69,29 +76,54 @@ class MainWindow(QWidget):
         self.table.setColumnCount(6)
         layout.addWidget(self.table)
 
-        headers = ['Page count', 'Dimensions', 'Short', 'Long', 'Paper size', 'Pages']
+        headers = [self.translate("page-count"), self.translate("dimensions"),
+                   self.translate("short"), self.translate("long"),
+                   self.translate("paper-size"), self.translate("pages")]
         self.table.setHorizontalHeaderLabels(headers)
         self.table.verticalHeader().setVisible(False)
         self.table.setWordWrap(False)
 
         self.table.setColumnWidth(0, 70)
         self.table.setColumnWidth(1, 100)
-        self.table.setColumnWidth(2, 40)
-        self.table.setColumnWidth(3, 40)
+        self.table.setColumnWidth(2, 45)
+        self.table.setColumnWidth(3, 45)
         self.table.setColumnWidth(4, 70)
 
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(5, QHeaderView.Stretch)
-        
-        surfaceLayout = QHBoxLayout()
-        self.surfaceButton = QPushButton('Select big pages')
-        self.surfaceButton.clicked.connect(self.selectBigPages)
-        surfaceLayout.addWidget(self.surfaceButton)
-        self.surfaceLabel = SurfaceLabel()
-        surfaceLayout.addWidget(self.surfaceLabel)
-        surfaceLayout.setStretch(0, 1)
-        surfaceLayout.setStretch(1, 1)
-        layout.addLayout(surfaceLayout)
+
+        self.surfaceLabel = SurfaceLabel(self.translate("surface-text"))
+        self.surfaceLabel.setStyleSheet("font-size: 24px;")
+        layout.addWidget(self.surfaceLabel)
+
+        if len(self.settings.filters) > 0:
+            filterModeLayout = QHBoxLayout()
+            filterModeLayout.addWidget(QLabel(self.translate("filter-action")+":"))
+            self.filerModeSelect = QRadioButton(self.translate("filter-select-rows"))
+            self.filerModeChangeColor = QRadioButton(self.translate("filter-change-bg-color"))
+
+            filterModeLayout.addWidget(self.filerModeSelect)
+            filterModeLayout.addWidget(self.filerModeChangeColor)
+
+            self.filterModeGroup = QButtonGroup()
+            self.filterModeGroup.addButton(self.filerModeSelect)
+            self.filterModeGroup.addButton(self.filerModeChangeColor)
+            self.filerModeSelect.setChecked(True)
+            layout.addLayout(filterModeLayout)
+
+            filterButtonLayout = QGridLayout()
+            row = 0
+            col = 0
+            for filter in settings.filters:
+                button = QPushButton(filter.text)
+                button.clicked.connect(partial(self.filterPages, filter))
+                filterButtonLayout.addWidget(button, row, col)
+                col += 1
+                if col >= MAX_BUTTON_COLS:
+                    col = 0
+                    row += 1
+
+            layout.addLayout(filterButtonLayout)
 
     def printPages(self, pages:Iterable[int]):
         if len(pages) == 0:
@@ -119,7 +151,7 @@ class MainWindow(QWidget):
 
     def openFile(self):
         file_dialog = QFileDialog()
-        file_path, _ = file_dialog.getOpenFileName(self, 'Open PDF', '', 'PDF Files (*.pdf)')
+        file_path, _ = file_dialog.getOpenFileName(self, self.translate("open-pdf"), '', 'PDF Files (*.pdf)')
         if file_path:
             reader = PdfReader(file_path)
             stats = sorted(reader.getStats(), key=lambda x: (
@@ -132,26 +164,43 @@ class MainWindow(QWidget):
                 self.table.setItem(row, 0, QTableWidgetItem(str(len(stat.pages))))
                 w = min(stat.dimension.width, stat.dimension.height)
                 h = max(stat.dimension.width, stat.dimension.height)
-                paperSize = f"unknown" if stat.dimension not in self.settings.pageSizes else self.settings.pageSizes[stat.dimension]
+                paperSize = self.translate("unknown") if stat.dimension not in self.settings.pageSizes else self.settings.pageSizes[stat.dimension]
                 self.table.setItem(row, 1, QTableWidgetItem(f"{w}x{h} mm"))
                 self.table.setItem(row, 2, QTableWidgetItem(f"{w}"))
                 self.table.setItem(row, 3, QTableWidgetItem(f"{h}"))
                 self.table.setItem(row, 4, QTableWidgetItem(paperSize))
                 self.table.setItem(row, 5, QTableWidgetItem(self.printPages(stat.pages)))
 
-    def selectBigPages(self):
-        self.table.clearSelection()
+    def filterPages(self, filter:Filter):
+        self.clearFilter()
         rowCount = self.table.rowCount()
         for row in range(rowCount):
             short = int(self.table.item(row, 2).text())
             long = int(self.table.item(row, 3).text())
-            for rule in self.settings.bigPages:
-                minShort, minLong = rule
-                if short >= minShort and long >= minLong:
-                    selectionRange = QTableWidgetSelectionRange(row, 0, row, self.table.columnCount() - 1)
-                    self.table.setRangeSelected(selectionRange, True)
-                    break
+            if filter.match(short, long):
+                selectionRange = QTableWidgetSelectionRange(row, 0, row, self.table.columnCount() - 1)
+                self.filterAction(selectionRange)
         self.table.setFocus()
+
+    def clearFilter(self):
+        self.table.clearSelection()
+        rowCount = self.table.rowCount()
+        colCount = self.table.columnCount()
+        for row in range(rowCount):
+            for col in range(colCount):
+                item = self.table.item(row, col)
+                if item:
+                    item.setBackground(QBrush())
+
+    def filterAction(self, selectionRange:QTableWidgetSelectionRange):
+        if self.filterModeGroup.checkedButton() == self.filerModeSelect:
+            self.table.setRangeSelected(selectionRange, True)
+        else:
+            for row in range(selectionRange.topRow(), selectionRange.bottomRow() + 1):
+                for col in range(selectionRange.leftColumn(), selectionRange.rightColumn() + 1):
+                    item = self.table.item(row, col)
+                    if item:
+                        item.setBackground(QBrush(QColor("#abcdd9")))
 
     def calculateBigPagesSurface(self):
         selectedRanges = self.table.selectedRanges()

@@ -50,7 +50,7 @@ dimensions:
       height: 707
 
 filters:
-#  - text: "Select A/3-as"
+#  - text: "Select A/3 size"
 #    rules:
 #      - min-short-side: 217
 #        max-short-side: 297
@@ -61,7 +61,7 @@ filters:
 #        min-long-side: 298
 #        max-long-side: 420
 
-language: HU
+language: EN
 
 dictionaries:
   - name: HU

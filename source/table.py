@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import QApplication, QTableWidget
-from PyQt5.QtGui import QKeyEvent, QKeySequence
+from PySide6.QtWidgets import QApplication, QTableWidget
+from PySide6.QtGui import QKeyEvent, QKeySequence
 
 
 class TableWidget(QTableWidget):

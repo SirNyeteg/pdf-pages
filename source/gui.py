@@ -1,9 +1,9 @@
-from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QPushButton, 
-                             QFileDialog, QTableWidgetItem, QHeaderView,
-                             QAbstractItemView, QMessageBox, QHBoxLayout, QLabel,
-                             QTableWidgetSelectionRange, QMenu, QRadioButton, QButtonGroup,
-                             QGridLayout)
-from PyQt5.QtGui import QContextMenuEvent, QBrush, QColor
+from PySide6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QPushButton,
+                               QFileDialog, QTableWidgetItem, QHeaderView,
+                               QAbstractItemView, QMessageBox, QHBoxLayout, QLabel,
+                               QTableWidgetSelectionRange, QMenu, QRadioButton, QButtonGroup,
+                               QGridLayout)
+from PySide6.QtGui import QContextMenuEvent, QBrush, QColor
 
 from pdf import PdfReader
 from settings import Settings, Filter
@@ -16,7 +16,7 @@ import os
 import sys
 
 
-BUILD_VERSION = "2024-10-20"
+BUILD_VERSION = "2024-10-25"
 MAX_BUTTON_COLS = 4
 
 
@@ -32,10 +32,13 @@ class SurfaceLabel(QLabel):
         self.updateText()
 
     def updateText(self):
-        self.setText(f"{self.labelText}: {self.getFormattedSurface()} dm<sup>2</sup>")
+        self.setText(f"{self.labelText}: {self.getFormattedSurface()} dm<sup>2</sup> ({self.getFormattedSurfaceSquereMeters()} m<sup>2</sup>)")
 
     def getFormattedSurface(self) -> str:
         return f"{self.surface / (100*100):.1f}"
+
+    def getFormattedSurfaceSquereMeters(self) -> str:
+        return f"{self.surface / (100*100) / (10*10):.3f}"
 
     def contextMenuEvent(self, event:QContextMenuEvent):
         menu = QMenu(self)
@@ -90,7 +93,7 @@ class MainWindow(QWidget):
         self.table.setColumnWidth(4, 70)
 
         header = self.table.horizontalHeader()
-        header.setSectionResizeMode(5, QHeaderView.Stretch)
+        header.setSectionResizeMode(5, QHeaderView.ResizeMode.Stretch)
 
         self.surfaceLabel = SurfaceLabel(self.translate("surface-text"))
         self.surfaceLabel.setStyleSheet("font-size: 24px;")
@@ -224,12 +227,14 @@ def showAlert(text:str):
     messageBox.setText(text)
     messageBox.setIcon(QMessageBox.Information)
     messageBox.setStandardButtons(QMessageBox.Ok)
-    messageBox.exec_()
+    messageBox.exec()
 
 
 def loadSettings() -> Settings:
     if getattr(sys, 'frozen', False):
         scriptPath = sys.executable
+    elif sys.argv[0].endswith('.exe'):
+        scriptPath = sys.argv[0]
     else:
         scriptPath = os.path.abspath(__file__)
     scriptDir = os.path.dirname(scriptPath)
@@ -245,4 +250,4 @@ if __name__ == '__main__':
     window = MainWindow(settings)
     window.setWindowTitle(f"PDF page size reader ({BUILD_VERSION})")
     window.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

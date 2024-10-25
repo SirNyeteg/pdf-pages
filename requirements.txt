@@ -1,5 +1,6 @@
 reportlab
 PyYaml
-PyQt5
+PySide6
 pyinstaller
 PyPDF2
+nuitka
